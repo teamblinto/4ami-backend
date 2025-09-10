@@ -83,30 +83,36 @@ import { CommonModule } from './common/common.module';
     // Mailer
     MailerModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        transport: {
-          host: configService.get('mail.host'),
-          port: configService.get('mail.port'),
-          secure: false,
-          auth: {
-            user: configService.get('mail.user'),
-            pass: configService.get('mail.pass'),
+      useFactory: (configService: ConfigService) => {
+        const mailConfig = {
+          transport: {
+            host: configService.get('mail.host'),
+            port: configService.get('mail.port'),
+            secure: false,
+            auth: {
+              user: configService.get('mail.user'),
+              pass: configService.get('mail.pass'),
+            },
+            connectionTimeout: 60000, // 60 seconds
+            greetingTimeout: 30000,   // 30 seconds
+            socketTimeout: 60000,     // 60 seconds
           },
-          connectionTimeout: 60000, // 60 seconds
-          greetingTimeout: 30000,   // 30 seconds
-          socketTimeout: 60000,     // 60 seconds
-        },
-        defaults: {
-          from: configService.get('mail.from'),
-        },
-        template: {
-          dir: __dirname + '/templates',
-          adapter: new HandlebarsAdapter(),
-          options: {
-            strict: true,
+          defaults: {
+            from: configService.get('mail.from'),
           },
-        },
-      }),
+        };
+
+        // Log email configuration (without password)
+        console.log('📧 Email Config:', {
+          host: mailConfig.transport.host,
+          port: mailConfig.transport.port,
+          user: mailConfig.transport.auth.user,
+          from: mailConfig.defaults.from,
+          hasPassword: !!mailConfig.transport.auth.pass,
+        });
+
+        return mailConfig;
+      },
       inject: [ConfigService],
     }),
 

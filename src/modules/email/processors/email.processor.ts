@@ -20,6 +20,9 @@ export class EmailProcessor {
     const { to, subject, text, html, cc, bcc } = job.data;
 
     try {
+      console.log(`📧 Attempting to send email to: ${to}`);
+      console.log(`📧 Subject: ${subject}`);
+      
       await this.mailerService.sendMail({
         to,
         subject,
@@ -29,10 +32,15 @@ export class EmailProcessor {
         bcc,
       });
 
-      console.log(`Email sent successfully to ${to}`);
+      console.log(`✅ Email sent successfully to ${to}`);
       return { success: true, to, subject };
     } catch (error) {
-      console.error(`Failed to send email to ${to}:`, error);
+      console.error(`❌ Failed to send email to ${to}:`, error);
+      console.error(`❌ Error details:`, {
+        message: error.message,
+        code: error.code,
+        response: error.response,
+      });
       throw error;
     }
   }

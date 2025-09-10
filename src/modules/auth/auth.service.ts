@@ -192,7 +192,10 @@ export class AuthService {
     user.email = userData.email;
     user.firstName = userData.firstName;
     user.lastName = userData.lastName;
+    user.title = userData.title;
     user.phone = userData.phone;
+    user.company = userData.company;
+    user.source = userData.source;
     user.role = userData.role;
     user.isActive = userData.isActive;
     user.isEmailVerified = userData.isEmailVerified;

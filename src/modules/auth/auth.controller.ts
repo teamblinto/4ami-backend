@@ -17,6 +17,7 @@ import { SignInDto } from './dto/signin.dto';
 import { CustomerSignupDto } from './dto/customer-signup.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { EmailVerificationResponseDto } from './dto/email-verification-response.dto';
+import { SignInResponseDto } from './dto/signin-response.dto';
 import { UserResponseDto } from '../users/dto/user-response.dto';
 import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -60,16 +61,37 @@ export class AuthController {
   @Public()
   @UseGuards(AuthGuard('local'))
   @Post('signin')
-  @UseInterceptors(ClassSerializerInterceptor)
   @ApiOperation({ summary: 'User login' })
   @ApiResponse({ 
     status: 200, 
     description: 'User successfully logged in',
-    type: AuthResponseDto
+    type: SignInResponseDto
   })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   async signIn(@Body() signInDto: SignInDto, @Request() req) {
-    return this.authService.signIn(req.user);
+    const result = await this.authService.signIn(req.user);
+    
+    // Manually construct response following security best practices
+    return {
+      user: {
+        id: result.user.id,
+        email: result.user.email,
+        firstName: result.user.firstName,
+        lastName: result.user.lastName,
+        title: result.user.title,
+        phone: result.user.phone,
+        company: result.user.company,
+        source: result.user.source,
+        role: result.user.role,
+        isActive: result.user.isActive,
+        isEmailVerified: result.user.isEmailVerified,
+        lastLoginAt: result.user.lastLoginAt,
+        createdAt: result.user.createdAt,
+        updatedAt: result.user.updatedAt,
+        fullName: `${result.user.firstName} ${result.user.lastName}`,
+      },
+      token: result.token,
+    };
   }
 
 
