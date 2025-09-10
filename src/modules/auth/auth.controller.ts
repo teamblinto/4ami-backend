@@ -14,7 +14,9 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagg
 import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/signup.dto';
 import { SignInDto } from './dto/signin.dto';
+import { CustomerSignupDto } from './dto/customer-signup.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
+import { EmailVerificationResponseDto } from './dto/email-verification-response.dto';
 import { UserResponseDto } from '../users/dto/user-response.dto';
 import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -38,6 +40,21 @@ export class AuthController {
   @ApiResponse({ status: 409, description: 'User already exists' })
   async signUp(@Body() signUpDto: SignUpDto) {
     return this.authService.signUp(signUpDto);
+  }
+
+  @Public()
+  @Post('customer-admin-signup')
+  @UseInterceptors(ClassSerializerInterceptor)
+  @ApiOperation({ summary: 'Customer signup with invitation code' })
+  @ApiResponse({ 
+    status: 201, 
+    description: 'Customer successfully registered',
+    type: AuthResponseDto
+  })
+  @ApiResponse({ status: 400, description: 'Invalid invitation code or validation error' })
+  @ApiResponse({ status: 409, description: 'User already exists' })
+  async customerSignUp(@Body() customerSignupDto: CustomerSignupDto) {
+    return this.authService.customerSignUp(customerSignupDto);
   }
 
   @Public()
@@ -72,11 +89,41 @@ export class AuthController {
   @Public()
   @Get('verify-email/:token')
   @ApiOperation({ summary: 'Verify email address' })
-  @ApiResponse({ status: 200, description: 'Email verified successfully' })
+  @ApiResponse({ status: 200, description: 'Email verified successfully', type: EmailVerificationResponseDto })
   @ApiResponse({ status: 400, description: 'Invalid verification token' })
-  async verifyEmail(@Param('token') token: string) {
-    await this.authService.verifyEmail(token);
-    return { message: 'Email verified successfully' };
+  async verifyEmail(@Param('token') token: string): Promise<EmailVerificationResponseDto> {
+    const user = await this.authService.verifyEmail(token);
+    return { 
+      message: 'Email verified successfully',
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        title: user.title,
+        phone: user.phone,
+        company: user.company,
+        source: user.source,
+        role: user.role,
+        isActive: user.isActive,
+        isEmailVerified: user.isEmailVerified,
+        emailVerificationToken: user.emailVerificationToken,
+        lastLoginAt: user.lastLoginAt,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        fullName: `${user.firstName} ${user.lastName}`,
+      }
+    };
+  }
+
+  @Public()
+  @Post('clear-verification-token/:token')
+  @ApiOperation({ summary: 'Clear verification token after successful verification' })
+  @ApiResponse({ status: 200, description: 'Verification token cleared successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid verification token' })
+  async clearVerificationToken(@Param('token') token: string) {
+    await this.authService.clearVerificationToken(token);
+    return { message: 'Verification token cleared successfully' };
   }
 
   @Public()

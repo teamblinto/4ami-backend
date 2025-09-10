@@ -2,7 +2,7 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Create custom types
-CREATE TYPE user_role AS ENUM ('admin', 'customer_admin', 'customer_user');
+CREATE TYPE user_role AS ENUM ('ADMIN', 'CUSTOMER_ADMIN', 'CUSTOMER_USER');
 CREATE TYPE project_status AS ENUM ('pending', 'in_progress', 'completed', 'cancelled');
 CREATE TYPE asset_status AS ENUM ('active', 'inactive', 'archived');
 CREATE TYPE report_status AS ENUM ('generating', 'completed', 'failed');

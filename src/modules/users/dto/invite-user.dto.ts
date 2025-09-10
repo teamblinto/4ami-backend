@@ -15,27 +15,25 @@ export class InviteUserDto {
   @IsString()
   lastName: string;
 
-  @ApiProperty({ example: '+1234567890', required: false })
-  @IsOptional()
-  @IsString()
-  phone?: string;
-
-  @ApiProperty({ enum: UserRole, required: false })
-  @IsOptional()
-  @IsEnum(UserRole)
-  role?: UserRole;
+  @ApiProperty({ 
+    enum: UserRole, 
+    enumName: 'UserRole',
+    example: UserRole.CUSTOMER_ADMIN
+  })
+  @IsEnum(UserRole, {
+    message: 'role must be one of the following values: ADMIN, CUSTOMER_ADMIN, CUSTOMER_USER'
+  })
+  role: UserRole;
 
   @ApiProperty({ example: 'A7X3D' })
   @IsString()
   invitationCode: string;
 
-  @ApiProperty({ example: 'ABC Corporation', required: false })
-  @IsOptional()
+  @ApiProperty({ example: 'ABC Corporation' })
   @IsString()
-  company?: string;
+  company: string;
 
-  @ApiProperty({ example: 'How did you hear about us', required: false })
-  @IsOptional()
+  @ApiProperty({ example: 'How did you hear about us' })
   @IsString()
-  source?: string;
+  source: string;
 }

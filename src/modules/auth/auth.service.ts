@@ -13,6 +13,7 @@ import { User } from '../../entities/user.entity';
 import { UserRole } from '../../common/enums/user-role.enum';
 import { SignUpDto } from './dto/signup.dto';
 import { SignInDto } from './dto/signin.dto';
+import { CustomerSignupDto } from './dto/customer-signup.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 import { EmailService } from '../email/email.service';
@@ -66,6 +67,70 @@ export class AuthService {
     return { user: savedUser, token };
   }
 
+  async customerSignUp(customerSignupDto: CustomerSignupDto): Promise<AuthResponseDto> {
+    const { 
+      email, 
+      password, 
+      confirmPassword, 
+      firstName, 
+      lastName, 
+      title, 
+      company, 
+      phone, 
+      source, 
+      role, 
+      invitationCode,
+      agreeToTerms 
+    } = customerSignupDto;
+
+    // Validate password confirmation
+    if (password !== confirmPassword) {
+      throw new BadRequestException('Passwords do not match');
+    }
+
+    // Validate terms agreement
+    if (agreeToTerms !== 'true') {
+      throw new BadRequestException('You must agree to the terms and conditions');
+    }
+
+    // Find user by invitation code
+    const invitedUser = await this.userRepository.findOne({
+      where: { emailVerificationToken: invitationCode },
+    });
+
+    if (!invitedUser) {
+      throw new BadRequestException('Invalid or expired invitation code');
+    }
+
+    // Check if user already has a password (already completed signup)
+    if (invitedUser.password) {
+      throw new ConflictException('User has already completed signup');
+    }
+
+    // Check if email matches the invitation
+    if (invitedUser.email !== email) {
+      throw new BadRequestException('Email does not match the invitation');
+    }
+
+    // Update user with signup information
+    invitedUser.password = password; // Let User entity handle hashing
+    invitedUser.firstName = firstName;
+    invitedUser.lastName = lastName;
+    invitedUser.title = title;
+    invitedUser.company = company;
+    invitedUser.phone = phone;
+    invitedUser.source = source;
+    invitedUser.role = role;
+    invitedUser.isActive = true;
+    invitedUser.isEmailVerified = true;
+    invitedUser.emailVerificationToken = null; // Clear the invitation token
+
+    const savedUser = await this.userRepository.save(invitedUser);
+    const token = this.generateToken(savedUser);
+
+    return { user: savedUser, token };
+  }
+
   async signIn(user: User): Promise<AuthResponseDto> {
     console.log('🚀 SignIn called for user:', user.email);
 
@@ -103,6 +168,12 @@ export class AuthService {
 
     const userData = result[0];
     console.log('👤 User found:', userData.email, 'Password hash exists:', !!userData.password);
+    
+    // Check if user has a password set
+    if (!userData.password) {
+      console.log('❌ User has no password set');
+      return null;
+    }
     
     // Validate password using bcrypt directly
     const bcrypt = require('bcryptjs');
@@ -148,7 +219,7 @@ export class AuthService {
     return user;
   }
 
-  async verifyEmail(token: string): Promise<void> {
+  async verifyEmail(token: string): Promise<User> {
     const user = await this.userRepository.findOne({
       where: { emailVerificationToken: token },
     });
@@ -157,9 +228,29 @@ export class AuthService {
       throw new BadRequestException('Invalid verification token');
     }
 
+    // Check if user is already verified
+    if (user.isEmailVerified) {
+      return user; // Already verified, return user object
+    }
+
     user.isEmailVerified = true;
-    user.emailVerificationToken = null;
+    // Don't set emailVerificationToken to null immediately
+    // Keep it for a short period to allow multiple verification attempts
+    // The token will be cleared by a cleanup job or after a certain time
     await this.userRepository.save(user);
+    
+    return user;
+  }
+
+  async clearVerificationToken(token: string): Promise<void> {
+    const user = await this.userRepository.findOne({
+      where: { emailVerificationToken: token },
+    });
+
+    if (user && user.isEmailVerified) {
+      user.emailVerificationToken = null;
+      await this.userRepository.save(user);
+    }
   }
 
   async requestPasswordReset(email: string): Promise<void> {
@@ -200,6 +291,12 @@ export class AuthService {
     user.passwordResetToken = null;
     user.passwordResetExpires = null;
     await this.userRepository.save(user);
+  }
+
+  private async hashPassword(password: string): Promise<string> {
+    const bcrypt = require('bcryptjs');
+    const saltRounds = 10;
+    return bcrypt.hash(password, saltRounds);
   }
 
   private generateToken(user: User): string {

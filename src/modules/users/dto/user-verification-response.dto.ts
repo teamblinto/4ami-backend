@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { UserRole } from '../../../common/enums/user-role.enum';
 
-export class UserResponseDto {
+export class UserVerificationResponseDto {
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
   id: string;
 
@@ -35,6 +35,9 @@ export class UserResponseDto {
   @ApiProperty({ example: true })
   isEmailVerified: boolean;
 
+  @ApiProperty({ example: 'A7X3D' })
+  emailVerificationToken: string;
+
   @ApiProperty({ example: '2023-01-01T00:00:00.000Z' })
   lastLoginAt?: Date;
 
@@ -47,3 +50,4 @@ export class UserResponseDto {
   @ApiProperty({ example: 'John Doe' })
   fullName: string;
 }
+

@@ -39,24 +39,26 @@ export class EmailProcessor {
 
   @Process('send-invitation')
   async handleSendInvitation(job: Job<{
-    email: string;
     firstName: string;
     lastName: string;
+    company: string;
+    email: string;
     role: string;
-    invitationToken: string;
-    customMessage?: string;
+    source: string;
+    invitationCode: string;
   }>) {
-    const { email, firstName, lastName, role, invitationToken, customMessage } = job.data;
+    const { firstName, lastName, company, email, role, source, invitationCode } = job.data;
 
     try {
-      const invitationUrl = `${process.env.FRONTEND_URL || 'https://4ami-mu.vercel.app'}/customer_signup?token=${invitationToken}`;
+      const invitationUrl = `${process.env.FRONTEND_URL || 'https://4ami-mu.vercel.app'}/customer-signup?token=${invitationCode}`;
       
       const html = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2>Welcome to 4AMI Platform</h2>
           <p>Hello ${firstName} ${lastName},</p>
           <p>You have been invited to join the 4AMI Platform as a ${role}.</p>
-          ${customMessage ? `<p>${customMessage}</p>` : ''}
+          <p><strong>Company:</strong> ${company}</p>
+          <p><strong>Invitation Code:</strong> ${invitationCode}</p>
           <p>Click the link below to complete your registration:</p>
           <a href="${invitationUrl}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Complete Registration</a>
           <p>If the button doesn't work, copy and paste this link into your browser:</p>

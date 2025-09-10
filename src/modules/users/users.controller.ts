@@ -10,6 +10,7 @@ import {
   UseGuards,
   UseInterceptors,
   ClassSerializerInterceptor,
+  NotFoundException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -24,6 +25,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InviteUserDto } from './dto/invite-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
+import { UserVerificationResponseDto } from './dto/user-verification-response.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { UserRole } from '../../common/enums/user-role.enum';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -124,6 +126,70 @@ export class UsersController {
   @ApiResponse({ status: 409, description: 'User already exists' })
   inviteUser(@Body() inviteUserDto: InviteUserDto) {
     return this.usersService.inviteUser(inviteUserDto);
+  }
+
+  @Get('verify-token/:token')
+  @Public()
+  @ApiOperation({ summary: 'Get user by email verification token' })
+  @ApiResponse({ status: 200, description: 'User found', type: UserVerificationResponseDto })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async getUserByVerificationToken(@Param('token') token: string): Promise<UserVerificationResponseDto> {
+    const user = await this.usersService.findByEmailVerificationToken(token);
+    if (!user) {
+      throw new NotFoundException('Invalid or expired verification token');
+    }
+    
+    // Manually construct response to include emailVerificationToken
+    return {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      title: user.title,
+      phone: user.phone,
+      company: user.company,
+      source: user.source,
+      role: user.role,
+      isActive: user.isActive,
+      isEmailVerified: user.isEmailVerified,
+      emailVerificationToken: user.emailVerificationToken,
+      lastLoginAt: user.lastLoginAt,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+      fullName: `${user.firstName} ${user.lastName}`,
+    };
+  }
+
+  @Get('verify-status/:email')
+  @Public()
+  @ApiOperation({ summary: 'Get user verification status by email' })
+  @ApiResponse({ status: 200, description: 'User verification status found', type: UserVerificationResponseDto })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async getUserVerificationStatus(@Param('email') email: string): Promise<UserVerificationResponseDto> {
+    const user = await this.usersService.findByEmail(email);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    
+    // Manually construct response to include emailVerificationToken
+    return {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      title: user.title,
+      phone: user.phone,
+      company: user.company,
+      source: user.source,
+      role: user.role,
+      isActive: user.isActive,
+      isEmailVerified: user.isEmailVerified,
+      emailVerificationToken: user.emailVerificationToken,
+      lastLoginAt: user.lastLoginAt,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+      fullName: `${user.firstName} ${user.lastName}`,
+    };
   }
 
   @Patch(':id/activate')

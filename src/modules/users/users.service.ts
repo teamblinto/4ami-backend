@@ -85,6 +85,42 @@ export class UsersService {
     });
   }
 
+  async findByEmailVerificationToken(token: string): Promise<User | null> {
+    return this.userRepository.findOne({
+      where: { emailVerificationToken: token },
+    });
+  }
+
+  async findByEmailVerificationTokenOrEmail(token: string, email?: string): Promise<User | null> {
+    // First try to find by token
+    let user = await this.userRepository.findOne({
+      where: { emailVerificationToken: token },
+    });
+
+    // If not found by token and email is provided, try to find by email
+    // This handles cases where the user is already verified (token is null)
+    if (!user && email) {
+      user = await this.userRepository.findOne({
+        where: { email },
+      });
+    }
+
+    return user;
+  }
+
+  async findUserForVerification(token: string): Promise<User | null> {
+    // First try to find by verification token (for unverified users)
+    let user = await this.userRepository.findOne({
+      where: { emailVerificationToken: token },
+    });
+
+    // If not found by token, this might be a case where the user was already verified
+    // We need to find the user by other means - this is a limitation of the current approach
+    // The token should ideally be preserved or we need a different mechanism
+    
+    return user;
+  }
+
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
     const user = await this.findOne(id);
 
@@ -106,7 +142,7 @@ export class UsersService {
   }
 
   async inviteUser(inviteUserDto: InviteUserDto): Promise<User> {
-    const { email, firstName, lastName, role, phone, invitationCode, company, source } = inviteUserDto;
+    const { email, firstName, lastName, role, invitationCode, company, source } = inviteUserDto;
 
     // Check if user already exists
     const existingUser = await this.userRepository.findOne({
@@ -122,7 +158,8 @@ export class UsersService {
       firstName,
       lastName,
       role: role || UserRole.CUSTOMER_USER,
-      phone,
+      company,
+      source,
       isActive: false, // User needs to complete signup
       emailVerificationToken: invitationCode, // Use the frontend-generated code
     });
@@ -132,12 +169,13 @@ export class UsersService {
     // Send invitation email with the frontend-generated code
     try {
       await this.emailService.sendInvitation({
-        email: savedUser.email,
         firstName: savedUser.firstName,
         lastName: savedUser.lastName,
+        company: savedUser.company,
+        email: savedUser.email,
         role: savedUser.role,
-        invitationToken: savedUser.emailVerificationToken,
-        customMessage: `Welcome to 4AMI Platform! You have been invited as a ${savedUser.role.replace('_', ' ')}.`,
+        source: savedUser.source,
+        invitationCode: savedUser.emailVerificationToken,
       });
     } catch (error) {
       console.error('Failed to send invitation email:', error);

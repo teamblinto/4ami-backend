@@ -25,8 +25,15 @@ export class SignUpDto {
   @IsString()
   phone?: string;
 
-  @ApiProperty({ enum: UserRole, required: false })
+  @ApiProperty({ 
+    enum: UserRole, 
+    enumName: 'UserRole',
+    example: UserRole.CUSTOMER_USER,
+    required: false 
+  })
   @IsOptional()
-  @IsEnum(UserRole)
+  @IsEnum(UserRole, {
+    message: 'role must be one of the following values: ADMIN, CUSTOMER_ADMIN, CUSTOMER_USER'
+  })
   role?: UserRole;
 }

@@ -22,7 +22,7 @@ export class User {
   @Column({ unique: true })
   email: string;
 
-  @Column()
+  @Column({ nullable: true })
   @Exclude()
   password: string;
 
@@ -33,7 +33,16 @@ export class User {
   lastName: string;
 
   @Column({ nullable: true })
+  title: string;
+
+  @Column({ nullable: true })
   phone: string;
+
+  @Column({ nullable: true })
+  company: string;
+
+  @Column({ nullable: true })
+  source: string;
 
   @Column({
     type: 'enum',

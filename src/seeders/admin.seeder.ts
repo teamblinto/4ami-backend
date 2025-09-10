@@ -34,7 +34,7 @@ export class AdminSeeder {
       'System',
       'Administrator',
       '+1234567890',
-      'admin',
+      'ADMIN',
       true,
       true,
       null

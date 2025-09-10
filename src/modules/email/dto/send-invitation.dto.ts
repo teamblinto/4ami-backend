@@ -1,11 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsString, IsOptional } from 'class-validator';
+import { IsEmail, IsString, IsOptional, IsEnum } from 'class-validator';
+import { UserRole } from '../../../common/enums/user-role.enum';
 
 export class SendInvitationDto {
-  @ApiProperty({ example: 'newuser@example.com' })
-  @IsEmail()
-  email: string;
-
   @ApiProperty({ example: 'John' })
   @IsString()
   firstName: string;
@@ -14,16 +11,30 @@ export class SendInvitationDto {
   @IsString()
   lastName: string;
 
-  @ApiProperty({ example: 'customer_user' })
+  @ApiProperty({ example: 'ABC Corporation' })
   @IsString()
-  role: string;
+  company: string;
 
-  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
-  @IsString()
-  invitationToken: string;
+  @ApiProperty({ example: 'newuser@example.com' })
+  @IsEmail()
+  email: string;
 
-  @ApiProperty({ example: 'Welcome to 4AMI Platform', required: false })
-  @IsOptional()
+  @ApiProperty({ 
+    enum: UserRole, 
+    enumName: 'UserRole',
+    example: UserRole.CUSTOMER_USER
+  })
+  @IsEnum(UserRole, {
+    message: 'role must be one of the following values: ADMIN, CUSTOMER_ADMIN, CUSTOMER_USER'
+  })
+  role: UserRole;
+
+  @ApiProperty({ example: 'How did you hear about us' })
   @IsString()
-  customMessage?: string;
+  source: string;
+
+  @ApiProperty({ example: 'A7X3D' })
+  @IsString()
+  invitationCode: string;
 }
+// Updated invitation fields - Wed Sep 10 11:15:49 AM +06 2025
