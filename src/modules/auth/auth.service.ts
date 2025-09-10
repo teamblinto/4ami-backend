@@ -253,6 +253,19 @@ export class AuthService {
     }
   }
 
+  async seedDatabase(): Promise<void> {
+    try {
+      // Import and run the seeder
+      const { Seeder } = await import('../../seeders');
+      const dataSource = this.userRepository.manager.connection;
+      const seeder = new Seeder(dataSource);
+      await seeder.run();
+    } catch (error) {
+      console.error('Database seeding failed:', error);
+      throw error;
+    }
+  }
+
   async requestPasswordReset(email: string): Promise<void> {
     const user = await this.userRepository.findOne({
       where: { email },

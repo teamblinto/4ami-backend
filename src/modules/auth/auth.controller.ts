@@ -127,6 +127,16 @@ export class AuthController {
   }
 
   @Public()
+  @Post('seed-database')
+  @ApiOperation({ summary: 'Run database seeder to create admin user' })
+  @ApiResponse({ status: 200, description: 'Database seeded successfully' })
+  @ApiResponse({ status: 500, description: 'Seeding failed' })
+  async seedDatabase() {
+    await this.authService.seedDatabase();
+    return { message: 'Database seeded successfully' };
+  }
+
+  @Public()
   @Post('forgot-password')
   @ApiOperation({ summary: 'Request password reset' })
   @ApiResponse({ status: 200, description: 'Password reset email sent' })

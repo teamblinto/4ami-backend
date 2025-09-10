@@ -3,6 +3,8 @@ import { ValidationPipe, ClassSerializerInterceptor } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
+import { DataSource } from 'typeorm';
+import { Seeder } from './seeders';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -42,6 +44,20 @@ async function bootstrap() {
   
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup(`${apiPrefix}/docs`, app, document);
+
+  // Run database seeder on startup (only in production)
+  if (configService.get('NODE_ENV') === 'production') {
+    try {
+      console.log('🌱 Running database seeder...');
+      const dataSource = app.get(DataSource);
+      const seeder = new Seeder(dataSource);
+      await seeder.run();
+      console.log('✅ Database seeding completed successfully');
+    } catch (error) {
+      console.error('❌ Database seeding failed:', error);
+      // Don't exit the app, just log the error
+    }
+  }
 
   const port = configService.get('PORT', 3000);
   await app.listen(port);
