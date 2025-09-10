@@ -111,6 +111,13 @@ import { CommonModule } from './common/common.module';
           hasPassword: !!mailConfig.transport.auth.pass,
         });
 
+        // Log Redis configuration for Bull queue
+        console.log('🔧 Redis Config for Bull:', {
+          host: configService.get('redis.host'),
+          port: configService.get('redis.port'),
+          hasPassword: !!configService.get('redis.password'),
+        });
+
         return mailConfig;
       },
       inject: [ConfigService],

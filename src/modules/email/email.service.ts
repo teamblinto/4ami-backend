@@ -13,12 +13,25 @@ export class EmailService {
   ) {}
 
   async sendEmail(sendEmailDto: SendEmailDto): Promise<{ jobId: string; message: string }> {
-    const job = await this.emailQueue.add('send-email', sendEmailDto);
+    console.log('📧 EmailService.sendEmail called with:', {
+      to: sendEmailDto.to,
+      subject: sendEmailDto.subject,
+      hasText: !!sendEmailDto.text,
+      hasHtml: !!sendEmailDto.html,
+    });
     
-    return {
-      jobId: job.id.toString(),
-      message: 'Email queued for sending',
-    };
+    try {
+      const job = await this.emailQueue.add('send-email', sendEmailDto);
+      console.log('✅ Email job queued successfully:', job.id);
+      
+      return {
+        jobId: job.id.toString(),
+        message: 'Email queued for sending',
+      };
+    } catch (error) {
+      console.error('❌ Failed to queue email job:', error);
+      throw error;
+    }
   }
 
   async sendInvitation(sendInvitationDto: SendInvitationDto): Promise<{ jobId: string; message: string }> {
