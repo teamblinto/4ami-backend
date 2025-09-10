@@ -88,7 +88,7 @@ import { CommonModule } from './common/common.module';
           transport: {
             host: configService.get('mail.host'),
             port: configService.get('mail.port'),
-            secure: false,
+            secure: configService.get('mail.port') === '465', // Use SSL for port 465
             auth: {
               user: configService.get('mail.user'),
               pass: configService.get('mail.pass'),
@@ -96,6 +96,17 @@ import { CommonModule } from './common/common.module';
             connectionTimeout: 60000, // 60 seconds
             greetingTimeout: 30000,   // 30 seconds
             socketTimeout: 60000,     // 60 seconds
+            // Railway-specific settings
+            tls: {
+              rejectUnauthorized: false, // Allow self-signed certificates
+              ciphers: 'SSLv3',
+            },
+            // Additional Railway network settings
+            pool: true,
+            maxConnections: 5,
+            maxMessages: 100,
+            rateDelta: 20000,
+            rateLimit: 5,
           },
           defaults: {
             from: configService.get('mail.from'),
@@ -109,6 +120,8 @@ import { CommonModule } from './common/common.module';
           user: mailConfig.transport.auth.user,
           from: mailConfig.defaults.from,
           hasPassword: !!mailConfig.transport.auth.pass,
+          environment: configService.get('NODE_ENV'),
+          isRailway: !!process.env.RAILWAY_ENVIRONMENT,
         });
 
         // Log Redis configuration for Bull queue
