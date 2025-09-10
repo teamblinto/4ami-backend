@@ -6,4 +6,6 @@ export const databaseConfig = registerAs('database', () => ({
   username: process.env.DB_USERNAME || process.env.PGUSER || '4ami_user',
   password: process.env.DB_PASSWORD || process.env.PGPASSWORD || '4ami_password',
   database: process.env.DB_DATABASE || process.env.PGDATABASE || '4ami_db',
+  // Support for Railway DATABASE_URL
+  url: process.env.DATABASE_URL || process.env.DATABASE_PUBLIC_URL,
 }));
