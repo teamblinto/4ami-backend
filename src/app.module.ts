@@ -44,7 +44,7 @@ import { CommonModule } from './common/common.module';
             type: 'postgres',
             url: databaseUrl,
             entities: [__dirname + '/**/*.entity{.ts,.js}'],
-            synchronize: configService.get('NODE_ENV') === 'development',
+            synchronize: true, // Enable for Railway deployment
             logging: configService.get('NODE_ENV') === 'development',
             ssl: configService.get('NODE_ENV') === 'production' ? { rejectUnauthorized: false } : false,
           };
@@ -59,7 +59,7 @@ import { CommonModule } from './common/common.module';
           password: configService.get('database.password'),
           database: configService.get('database.database'),
           entities: [__dirname + '/**/*.entity{.ts,.js}'],
-          synchronize: configService.get('NODE_ENV') === 'development',
+          synchronize: true, // Enable for Railway deployment
           logging: configService.get('NODE_ENV') === 'development',
           ssl: configService.get('NODE_ENV') === 'production' ? { rejectUnauthorized: false } : false,
         };
@@ -92,6 +92,9 @@ import { CommonModule } from './common/common.module';
             user: configService.get('mail.user'),
             pass: configService.get('mail.pass'),
           },
+          connectionTimeout: 60000, // 60 seconds
+          greetingTimeout: 30000,   // 30 seconds
+          socketTimeout: 60000,     // 60 seconds
         },
         defaults: {
           from: configService.get('mail.from'),
